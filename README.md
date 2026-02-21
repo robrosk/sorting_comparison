@@ -35,5 +35,5 @@ I hypothesize that insertion sort will outperform merge sort for small input siz
 
 # Discussion
 
-
+I found that merge sort was faster than insertion sort for all values of $n \geq 75$.  This is consistent with my hypothesis, as the crossover point fell at the lower end of my predicted range of 50 to 200.  Between $n = 50$ and $n = 75$, the two algorithms were nearly indistinguishable, with insertion sort holding a very slight edge.  Beyond the crossover, the gap grew dramatically. By $n = 10000$, insertion sort was roughly 93 times slower than merge sort, clearly illustrating the difference between $O(n^2)$ and $O(n \log n)$ growth rates.  Because the time difference is so small near the crossover, the practical advantage of insertion sort is limited to very small inputs.  One limitation of this experiment is that only randomly generated arrays were tested.  Nearly sorted input would likely favor insertion sort further, potentially shifting the crossover point higher.  Additionally, only 10 repetitions were used per input size, which may introduce some variance in the timing results, particularly at small values of n where execution times are in the microseconds.
 
