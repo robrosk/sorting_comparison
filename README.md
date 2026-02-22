@@ -67,7 +67,7 @@ insertion sort on subarrays within a recursive context rather than on independen
 The hybrid sorting algorithm, `timsort`, uses the standard merge sort recursive structure but switches to an insertion sort pass whenever the partition size drops to or below a threshold size `k`. 
 
 To determine the optimal value of `k`, two separate search strategies were implemented and compared on a randomly generated array of size $n=10000$:
-1. **Cross-Validation Approach:** We tested every multiple of 5 between $k = 5$ and $k = 500$ ($k \in \{5, 10, 15... 500\}$). For each $k$, `timsort` was run 10 times using the `timeit` module on fresh copies of the array, and the $k$ producing the lowest total time was recorded as optimal.
+1. **Cross-Validation Approach:** We tested every multiple of 5 between $k = 5$ and $k = 500$ ($k \in \{5, 10, 15... 500\}$). For each $k$, `timsort` was run 10 times using the `time` module on fresh copies of the array, and the $k$ producing the lowest total time was recorded as optimal.
 2. **Ternary Search Approach:** Because the runtime function of a sorting algorithm with respect to `k` forms a unimodal (U-shaped) curve, we implemented a ternary search algorithm to find the absolute minimum runtime. This search recursively discarded one-third of the search space (initially $k=1$ to $k=1000$) by comparing exactly two midpoints (`time` repetitions = 25) until the optimal threshold `k` was isolated.  
    * **Note on Ternary Search for Timsort:** While ternary search is theoretically optimal for continuous unimodal functions, Timsort's runtime with respect to `k` actually forms a step-function with flat plateaus. Because the array is recursively halved, the base case array sizes only exist at specific integer boundaries (e.g., sizes 19, 20, 39, 40). Thus, a threshold of $k=20$ and $k=38$ will trigger the exact same execution path and the exact same number of insertion sorts for an array of size 39. This creates flat plateaus on the runtime curve. Ternary search struggles on these plateaus because it relies on strictly decreasing/increasing slopes to narrow the search space; on a flat plateau, micro-fluctuations in hardware execution time will cause it to arbitrarily discard sections of the search space, leading to variance in the exact identified optimal $k$.
 
@@ -94,6 +94,15 @@ Across all array sizes n from 5 to 10000, timsort was faster than merge sort and
 
 ### Discussion
 
+**What is the optimal k?**
+Based on our empirical testing using both cross-validation and ternary search across 10 deterministic randomly generated arrays, the optimal value for the threshold `k` was consistently found to be in the range of `k = 10` to `k = 33`, with cross-validation strongly indicating `k = 10` to `k = 20`. 
+
+**Is k the same as the crossover point from Q5? Why or why not?**
+No, the optimal `k` is strictly smaller than the crossover point found in Q5 ($n \approx 50$ to $75$). This discrepancy exists because Q5 tested Insertion Sort and Merge Sort as *standalone* algorithms operating on completely independent arrays. 
+
+In Timsort, Insertion Sort is called recursively continuously at the bottom of the Merge Sort execution tree. While Insertion Sort on its own might remain faster than a full Merge Sort algorithm up to $n=75$, in the hybrid context, doing an insertion sort on a subarray of size 75 takes significantly longer than simply letting Merge Sort perform one or two more recursive splits down to arrays of size 15-20 before using Insertion Sort. The overhead of the recursive calls for sizes 20-75 is actually *less* than the quadratic time penalty $O(n^2)$ incurred by forcing Insertion Sort to handle those larger subarrays manually. Therefore, the optimal time to switch to Insertion Sort in a hybrid environment happens earlier (at a smaller $n$) than the breakeven point of the two standalone algorithms.
 
 ### Conclusion
+
+The results strongly support our hypothesis that Timsort, when utilizing an optimized `k` threshold (in our case, tightly bound around $10 \le k \le 30$), outperforms both standalone Insertion Sort and standalone Merge Sort across all input sizes. The optimization strategy, bolstered by analyzing the step-function plateau nature of Timsort's recursive halving, confirms that integrating a fast $O(n^2)$ algorithm at the leaves of an $O(n \log n)$ divide-and-conquer tree yields the most historically successful and highly performant sorting architecture.
 
