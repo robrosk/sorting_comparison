@@ -36,18 +36,18 @@ def merge(left, right):
 def main():
     n_values = [5, 10, 20, 50, 75, 100, 125, 150, 175, 200, 500, 1000, 2500, 5000, 10000]
     first_faster_n = None
-        for n in n_values:
-            arr = generate_random_array(n, 42)
-            insertion_time = timeit.timeit(lambda: insertion_sort(arr.copy()), number=10)
-            merge_time = timeit.timeit(lambda: merge_sort(arr.copy()), number=10)
+    for n in n_values:
+        arr = generate_random_array(n, 42)
+        insertion_time = timeit.timeit(lambda: insertion_sort(arr.copy()), number=10)
+        merge_time = timeit.timeit(lambda: merge_sort(arr.copy()), number=10)
         print(f"n = {n}: Insertion Sort = {insertion_time / 10:.6f}s, Merge Sort = {merge_time / 10:.6f}s")
             
-            if first_faster_n is None and merge_time < insertion_time:
-                first_faster_n = n
+        if first_faster_n is None and merge_time < insertion_time:
+            first_faster_n = n
 
-        if first_faster_n is not None:
+    if first_faster_n is not None:
         print(f"\nMerge sort first became faster than insertion sort at n = {first_faster_n}")
-        else:
+    else:
         print("\nMerge sort never became faster than insertion sort in this test.")
 
 if __name__ == "__main__":
