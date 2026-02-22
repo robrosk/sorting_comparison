@@ -17,13 +17,19 @@ def timsort(arr, k):
     return merge(left, right)
 
 # plotting with matplotlib
-def plot_results(results):
+def plot_results(results, title):
+    # make sure results is a numpy array
+    results = np.array(results)
+
+    # separate k values and times
     k_values = results[:, 0]
     times = results[:, 1]
+
+    # plot results
     plt.plot(k_values, times)
-    plt.xlabel("k")
+    plt.xlabel("k values")
     plt.ylabel("Time (s)")
-    plt.title("Timsort Performance")
+    plt.title(title)
     plt.show()
 
 # cross validation approach to find optimal k value
@@ -41,18 +47,52 @@ def cross_validation(arr, k_values):
             best_time = timsort_time
             print(f"Found new best k: {best_k} with time: {best_time}")
 
+    results = np.array(results)
+    plot_results(results, "Timsort Performance - Cross Validation Approach")
+
     return results, best_k, best_time
 
-# find optimal k value
+# ternary search to find optimal k value (lowest runtime)
+def ternary_search(arr, left, right, results):
+    if right - left < 3:
+        final_time = timeit.timeit(lambda: timsort(arr.copy(), left), number=25)
+        results.append((left, final_time))
+        return left, final_time, results
+    
+    m1 = left + (right - left) // 3
+    m2 = right - (right - left) // 3
+
+    timsort_time_m1 = timeit.timeit(lambda: timsort(arr.copy(), m1), number=25)
+    timsort_time_m2 = timeit.timeit(lambda: timsort(arr.copy(), m2), number=25)
+
+    results.append((m1, timsort_time_m1))
+    results.append((m2, timsort_time_m2))
+    
+    if timsort_time_m1 < timsort_time_m2:
+        return ternary_search(arr, left, m2, results)
+    else:
+        return ternary_search(arr, m1, right, results)
+
+# find optimal k value for timsort
 def find_optimal_k(arr, k_values):
-    results, best_k, best_time = cross_validation(arr, k_values)
+    results, optimal_k_cv, best_time_cv = cross_validation(arr, k_values)
 
-    # np array for ease of use
-    results = np.array(results)
-    # plot results
-    plot_results(results)
+    print("Cross validation results:")
+    print(f"Best k: {optimal_k_cv}")
+    print(f"Best time: {best_time_cv}")
 
-    return best_k, best_time
+    optimal_k_ternary, best_time_ternary, ternary_results = ternary_search(arr, 1, 5000, [])
+    ternary_results.sort(key=lambda x: x[0])
+    
+    plot_results(ternary_results, "Timsort Performance - Ternary Search Approach")
+
+    print("Ternary search results:")
+    print(f"Best k: {optimal_k_ternary}")
+    print(f"Best time: {best_time_ternary}")
+
+    same_result = (optimal_k_cv == optimal_k_ternary) and (best_time_cv == best_time_ternary)
+    print(f"Ternary search found the same optimal k and best time as cross validation: {same_result}")
+
 
 def main():
     array_size = 10000
@@ -61,12 +101,8 @@ def main():
     arr = generate_random_array(array_size, seed)
 
     k_values = range(5, 500 + 1, 5)
-    print(k_values)
 
-    optimal_k, optimal_time = find_optimal_k(arr, k_values)
-
-    print(f"Optimal k: {optimal_k}")
-    print(f"Optimal time: {optimal_time}")
+    find_optimal_k(arr, k_values)
 
 if __name__ == "__main__":
     main()
