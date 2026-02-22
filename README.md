@@ -56,20 +56,41 @@ Under the conditions tested, insertion sort had faster wall clock time for $n \l
 
 ### Hypothesis
 
-We hypothesize that timsort will outperform both insertion and merge sort for all values of n in terms of wall clock execution speed when the optimal value of k is used.  We expect that the optimal value of k will match the crossover point found in Q5, being within the range of 50 to 75.  
+We hypothesize that timsort will outperform both insertion and merge sort for all 
+values of n in terms of wall clock execution speed when the optimal value of k is used.  
+We expect that the optimal value of k will be close to the crossover point found in Q5, 
+in the range of 50 to 75, though it may differ slightly since the hybrid sort calls 
+insertion sort on subarrays within a recursive context rather than on independent arrays.
 
 ### Methods
 
+The hybrid sorting algorithm, `timsort`, uses the standard merge sort recursive structure but switches to an insertion sort pass whenever the partition size drops to or below a threshold size `k`. 
+
+To determine the optimal value of `k`, two separate search strategies were implemented and compared on a randomly generated array of size $n=10000$:
+1. **Cross-Validation Approach:** We tested every multiple of 5 between $k = 5$ and $k = 500$ ($k \in \{5, 10, 15... 500\}$). For each $k$, `timsort` was run 10 times using the `timeit` module on fresh copies of the array, and the $k$ producing the lowest total time was recorded as optimal.
+2. **Ternary Search Approach:** Because the runtime function of a sorting algorithm with respect to `k` forms a unimodal (U-shaped) curve, we implemented a ternary search algorithm to find the absolute minimum runtime. This search recursively discarded one-third of the search space (initially $k=1$ to $k=1000$) by comparing exactly two midpoints (`time` repetitions = 25) until the optimal threshold `k` was isolated.  
+   * **Note on Ternary Search for Timsort:** While ternary search is theoretically optimal for continuous unimodal functions, Timsort's runtime with respect to `k` actually forms a step-function with flat plateaus. Because the array is recursively halved, the base case array sizes only exist at specific integer boundaries (e.g., sizes 19, 20, 39, 40). Thus, a threshold of $k=20$ and $k=38$ will trigger the exact same execution path and the exact same number of insertion sorts for an array of size 39. This creates flat plateaus on the runtime curve. Ternary search struggles on these plateaus because it relies on strictly decreasing/increasing slopes to narrow the search space; on a flat plateau, micro-fluctuations in hardware execution time will cause it to arbitrarily discard sections of the search space, leading to variance in the exact identified optimal $k$.
+
+To ensure statistical significance, both search methods pre-generated the same list of 10 deterministic random arrays. This allowed the algorithms to compute the true average runtime across the 10 data distributions for each tested $k$ without adding random data variance during the searches. The results of both searches were plotted using `matplotlib` to visually confirm the runtime curves and optimal threshold.
+
+Finally, using the optimal $k$ derived from the searches, `timsort` was directly compared against standalone `insertion_sort` and `merge_sort`. The performance of all three algorithms was evaluated and recorded across arrays of varying sizes (from $n=5$ to $n=10000$) to determine the most efficient sorting strategy for different input scales.
+
+Additional details:
 1. Language: Python 3.12.5
-2. Timing: using `timeit` module
-3. Input: randomly generated arrays of size n
-4. Range of n values tested: 0 to 10000
-5. Number of repetitions per n: 10
-6. Source Code: https://github.com/robrosk/sorting_comparison
+2. Timing: using `time` module
+3. Input: randomly generated arrays of size 10000
+4. Number of repetitions per k: 25 for both cross validation and ternary search
+5. Source Code: https://github.com/robrosk/sorting_comparison
 
 ### Results
 
+Cross validation results:
+Best k: 10, 15, 20
 
+Ternary search results:
+Best k: 12, 16, 18, 23, 28, 31
+
+Across all array sizes n from 5 to 10000, timsort was faster than merge sort and insertion sort.  The difference between timsort and insertion sort was minimal as the size of n grew.
 
 ### Discussion
 
